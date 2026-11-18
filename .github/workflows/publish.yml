@@ -18,15 +18,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip the site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build the site from source.b64
         run: |
-          mkdir -p _site
-          unzip -o site.zip -d _site
-          touch _site/.nojekyll
-          ls -la _site
+          mkdir -p build
+          base64 -d source.b64 > src.tgz
+          tar xzf src.tgz -C build
+          cd build
+          npm ci
+          npm run build
+          touch dist/.nojekyll
+          ls -la dist
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: build/dist
       - id: deployment
         uses: actions/deploy-pages@v4
